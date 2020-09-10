@@ -9,6 +9,10 @@ find_package(realsense2 REQUIRED)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
+#set(CMAKE_CUDA_FLAGS "-Wall")
+#set(CMAKE_CUDA_FLAGS_DEBUG "-g")
+set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+
 # Add the application sources to the target
 add_subdirectory(src)
 

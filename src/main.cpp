@@ -3,7 +3,7 @@
 
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
 #include <iostream>             // for cout
-#include "cuda/depthToCuda.h"
+#include "cuda/CudaPipeline.h"
 
 // Hello RealSense example demonstrates the basics of connecting to a RealSense device
 // and taking advantage of depth data
@@ -20,6 +20,9 @@ int main(int argc, char * argv[]) try
     auto stream = p_p.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>();
     rs2_intrinsics intrinsics = stream.get_intrinsics(); // Calibration data
 
+    CudaPipeline cuda_pipeline = CudaPipeline(argc, argv, intrinsics);
+
+
     // Capture 30 frames to give autoexposure, etc. a chance to settle
     for (auto i = 0; i < 30; ++i) p.wait_for_frames();
 
@@ -27,7 +30,7 @@ int main(int argc, char * argv[]) try
     rs2::frameset frames = p.wait_for_frames();
     rs2::depth_frame depth = frames.get_depth_frame();
     // std::cout << "upload_depth_to_cuda " << RS2_CUDA_THREADS_PER_BLOCK << std::endl;
-    upload_depth_to_cuda(argc, argv, depth, intrinsics);
+    cuda_pipeline.process_depth(depth);
 
     while (true)
     {

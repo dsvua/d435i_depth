@@ -36,12 +36,13 @@ void upload_depth_to_cuda(int argc, char * argv[], rs2::depth_frame depth, rs2_i
 
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&dev_depth), count * sizeof(uint16_t)));
     checkCudaErrors(cudaMemcpy(dev_depth, depth_data, count * sizeof(uint16_t), cudaMemcpyHostToDevice));
-    // std::cout << "Copied depth image to GPU" << std::endl;
 
+    //------ this kernel will erase column in depth image. for testing purpose
     kernel_zero_column<<<1,128>>>(dev_depth, intristics.height, intristics.width);
-    getLastCudaError("Error: kernel_zero_column");
-
+    getLastCudaError("Failed: kernel_zero_column");
     checkCudaErrors(cudaMemcpy(modified_depth, dev_depth, count * sizeof(uint16_t), cudaMemcpyDeviceToHost));
-
     std::cout << "Original " << depth_data[intristics.width+360] << "Modified " << modified_depth[intristics.width+360] << std::endl;
+    //--------------------------
+
+
 }
