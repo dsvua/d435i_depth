@@ -1,3 +1,6 @@
 [submodule "external/eigenlib"]
 	path = external/eigenlib
 	url = https://gitlab.com/libeigen/eigen.git
+[submodule "external/cuda-samples"]
+	path = external/cuda-samples
+	url = https://github.com/NVIDIA/cuda-samples.git
