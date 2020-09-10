@@ -12,3 +12,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 # Add the application sources to the target
 add_subdirectory(src)
 
+include_directories(${PROJECT_NAME} PUBLIC cuda-samples/Common)
+
+#file(GLOB_RECURSE sources CONFIGURE_DEPENDS cuda-samples/Common/*.h)
+#add_library(cuda_common ${sources})
