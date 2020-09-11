@@ -7,7 +7,7 @@
 
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
 #include <stdint.h>
-// #include "hash_functions.h"
+#include "hash_functions.h"
 
 //void upload_depth_to_cuda(int argc, char * argv[], rs2::depth_frame frame, rs2_intrinsics intristics);
 
@@ -31,6 +31,7 @@ class CudaPipeline {
     private:
         int _cuda_device = 0;
         rs2_intrinsics _intristics;
+        HashData hashData;
 
         int get_cuda_device(int argc, char **argv);
         
