@@ -18,5 +18,4 @@ add_subdirectory(src)
 
 include_directories(${PROJECT_NAME} PUBLIC cuda-samples/Common)
 
-#file(GLOB_RECURSE sources CONFIGURE_DEPENDS cuda-samples/Common/*.h)
-#add_library(cuda_common ${sources})
+find_library(CUDART_LIBRARY cudart ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})

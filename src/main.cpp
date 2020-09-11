@@ -4,6 +4,10 @@
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
 #include <iostream>             // for cout
 #include "cuda/CudaPipeline.h"
+#include <stdint.h> 
+#include "helperFunctions.h"
+
+using namespace std;
 
 // Hello RealSense example demonstrates the basics of connecting to a RealSense device
 // and taking advantage of depth data
@@ -12,7 +16,7 @@ int main(int argc, char * argv[]) try
 
     // Create configuration for pipeline
     rs2::config cfg;
-    cfg.enable_stream(RS2_STREAM_DEPTH);
+    cfg.enable_stream(RS2_STREAM_DEPTH, 848, 480, RS2_FORMAT_Z16, 90);
     // Create a Pipeline - this serves as a top-level API for streaming and processing frames
     rs2::pipeline p;
     rs2::pipeline_profile p_p;
@@ -30,26 +34,33 @@ int main(int argc, char * argv[]) try
     rs2::frameset frames = p.wait_for_frames();
     rs2::depth_frame depth = frames.get_depth_frame();
     // std::cout << "upload_depth_to_cuda " << RS2_CUDA_THREADS_PER_BLOCK << std::endl;
+    cuda_pipeline.download_points=true;
     cuda_pipeline.process_depth(depth);
+    cuda_pipeline.download_points=false;
 
-    while (true)
-    {
-        // Block program until frames arrive
-        rs2::frameset frames = p.wait_for_frames();
+    vector<Point> tmp_points = convertFloatPointsToVectorPoint(cuda_pipeline.host_points, intrinsics.height * intrinsics.width);
+    std::cout << "Points exported" << std::endl;
+    writeToPly(tmp_points, "test.ply");
+    std::cout << "Points written" << std::endl;
 
-        // Try to get a frame of a depth image
-        rs2::depth_frame depth = frames.get_depth_frame();
+    // while (true)
+    // {
+    //     // Block program until frames arrive
+    //     rs2::frameset frames = p.wait_for_frames();
 
-        // Get the depth frame's dimensions
-        float width = depth.get_width();
-        float height = depth.get_height();
+    //     // Try to get a frame of a depth image
+    //     rs2::depth_frame depth = frames.get_depth_frame();
 
-        // Query the distance from the camera to the object in the center of the image
-        float dist_to_center = depth.get_distance(width / 2, height / 2);
+    //     // Get the depth frame's dimensions
+    //     float width = depth.get_width();
+    //     float height = depth.get_height();
 
-        // Print the distance
-        std::cout << "The camera is facing an object " << dist_to_center << " meters away \r";
-    }
+    //     // Query the distance from the camera to the object in the center of the image
+    //     float dist_to_center = depth.get_distance(width / 2, height / 2);
+
+    //     // Print the distance
+    //     std::cout << "The camera is facing an object " << dist_to_center << " meters away \r";
+    // }
 
     return EXIT_SUCCESS;
 }
