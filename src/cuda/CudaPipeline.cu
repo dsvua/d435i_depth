@@ -59,4 +59,6 @@ void CudaPipeline::process_depth(rs2::depth_frame depth_frame)
 
     integrate(transformation, dev_depth);
 
+    std::cout << "Image is integrated" << std::endl;
+
 }

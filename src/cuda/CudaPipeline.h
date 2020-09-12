@@ -21,7 +21,7 @@ class CudaPipeline {
             m_hashParams.m_hashBucketSize = HASH_BUCKET_SIZE;
             m_hashParams.m_hashMaxCollisionLinkedListSize = 70;
             m_hashParams.m_SDFBlockSize = SDF_BLOCK_SIZE;
-            m_hashParams.m_numSDFBlocks = 1000000;
+            m_hashParams.m_numSDFBlocks = 500000;
             m_hashParams.m_virtualVoxelSize = 0.004f;
             m_hashParams.m_maxIntegrationDistance = 4.0f;
             m_hashParams.m_minIntegrationDistance = 0.02f;
@@ -33,6 +33,7 @@ class CudaPipeline {
             m_hashParams.m_streamingGridDimensions = make_int3(257, 257, 257);
             m_hashParams.m_streamingMinGridPos = make_int3(-128, -128, -128);
             m_hashParams.m_streamingInitialChunkListSize = 2000;
+            m_hashData.allocate(m_hashParams, true);
 
         };
 

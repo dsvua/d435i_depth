@@ -107,6 +107,7 @@ struct HashData {
     __host__
 	void allocate(const HashParams& params, bool dataOnGPU = true) {
         m_bIsOnGPU = dataOnGPU;
+        std::cout << "Allocating d_SDFBlocks: " << sizeof(Voxel) * params.m_numSDFBlocks * params.m_SDFBlockSize*params.m_SDFBlockSize*params.m_SDFBlockSize << std::endl;
         if (m_bIsOnGPU) {
             checkCudaErrors(cudaMalloc(&d_heap, sizeof(unsigned int) * params.m_numSDFBlocks));
             checkCudaErrors(cudaMalloc(&d_heapCounter, sizeof(unsigned int)));
