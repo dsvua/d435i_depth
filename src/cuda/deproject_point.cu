@@ -12,8 +12,7 @@ void deproject_pixel_to_point_cuda(float points[3], const struct rs2_intrinsics 
     //assert(intrin->model != RS2_DISTORTION_BROWN_CONRADY); // Cannot deproject to an brown conrady model
     float x = (pixel[0] - intrin->ppx) / intrin->fx;
     float y = (pixel[1] - intrin->ppy) / intrin->fy;    
-    if(intrin->model == RS2_DISTORTION_INVERSE_BROWN_CONRADY)
-    {
+    if(intrin->model == RS2_DISTORTION_INVERSE_BROWN_CONRADY) {
         float r2  = x*x + y*y;
         float f = 1 + intrin->coeffs[0]*r2 + intrin->coeffs[1]*r2*r2 + intrin->coeffs[4]*r2*r2*r2;
         float ux = x*f + 2*intrin->coeffs[2]*x*y + intrin->coeffs[3]*(r2 + 2*x*x);
@@ -30,8 +29,7 @@ void deproject_pixel_to_point_cuda(float points[3], const struct rs2_intrinsics 
 
 __global__
 void kernel_deproject_depth_cuda(float * points, const rs2_intrinsics* intrin, const uint16_t * depth, 
-    const int minDepth, const int maxDepth)
-{
+    const int minDepth, const int maxDepth) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     
     if (i >= (*intrin).height * (*intrin).width) {
@@ -49,5 +47,5 @@ void kernel_deproject_depth_cuda(float * points, const rs2_intrinsics* intrin, c
         } else {
             deproject_pixel_to_point_cuda(points + j * 3, intrin, pixel, depth[j]);               
         }
-   }
+    }
 }

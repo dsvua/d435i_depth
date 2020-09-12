@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "hash_functions.h"
 #include "cuda_simple_matrix_math.h"
+#include "cuda_raycast_params.h"
 
 #ifndef MY_CUDA_PIPELINE
 
@@ -35,6 +36,21 @@ class CudaPipeline {
             m_hashParams.m_streamingInitialChunkListSize = 2000;
             m_hashData.allocate(m_hashParams, true);
 
+            m_rayCastParams.m_width = 848;
+            m_rayCastParams.m_height = 480;
+            m_rayCastParams.m_intrinsics = float4x4({_intristics.fx,    0,          _intristics.ppx, 0,
+                                                     0,             _intristics.fy, _intristics.ppy, 0,
+                                                     0,                 0,              1,           0});
+            m_rayCastParams.m_intrinsicsInverse = m_rayCastParams.m_intrinsics.getInverse();
+            m_rayCastParams.m_minDepth = 0.02f;
+            m_rayCastParams.m_maxDepth = 5.0f;
+            m_rayCastParams.m_rayIncrement = 0.8f * 0.02f;
+            m_rayCastParams.m_thresSampleDist = 50.5f * m_rayCastParams.m_rayIncrement;
+            m_rayCastParams.m_thresDist = 50.0f * m_rayCastParams.m_rayIncrement;
+            m_rayCastParams.m_useGradients = false;
+            m_rayCastParams.m_maxNumVertices = 1000000 * 6;
+
+
         };
 
         ~CudaPipeline(){
@@ -55,9 +71,12 @@ class CudaPipeline {
         rs2_intrinsics _intristics;
         HashParams	   m_hashParams;
         HashData	   m_hashData;
+        RayCastParams  m_rayCastParams;
         int            m_numIntegratedFrames = 0;
 
         int init_cuda_device(int argc, char **argv);
+        void setLastRigidTransform(const float4x4& lastRigidTransform);
+        void render();
         
 
 };

@@ -5,10 +5,9 @@
 #include "integrate_kernels.h"
 
 void CudaPipeline::integrate(const float4x4& lastRigidTransform, const uint16_t * dev_depth) {
-		
-    m_hashParams.m_rigidTransform = lastRigidTransform;
-    m_hashParams.m_rigidTransformInverse = m_hashParams.m_rigidTransform.getInverse();
 
+    setLastRigidTransform(lastRigidTransform);
+		
     //make the rigid transform available on the GPU
     m_hashData.updateParams(m_hashParams);
 

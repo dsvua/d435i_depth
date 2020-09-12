@@ -41,15 +41,13 @@ __global__ void resetHashKernel(HashData hashData)
 	}
 }
 
-__global__ void allocKernel(HashData hashData, const uint16_t * depth, const struct rs2_intrinsics * dev_intrin) 
-{
+__global__ void allocKernel(HashData hashData, const uint16_t * depth, const struct rs2_intrinsics * dev_intrin) {
 	const HashParams& hashParams = c_hashParams;
 
 	const unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
 	const unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
 	
-	if (x < dev_intrin->width && y < dev_intrin->height)
-	{
+	if (x < dev_intrin->width && y < dev_intrin->height) {
 
 		float d = (float)depth[y*dev_intrin->width + x] / 1000; // convert mm to meter
 		
@@ -189,8 +187,7 @@ __global__ void garbageCollectFreeKernel(HashData hashData) {
 	}
 }
 
-__global__ void compactifyHashAllInOneKernel(HashData hashData, const struct rs2_intrinsics * dev_intrin)
-{
+__global__ void compactifyHashAllInOneKernel(HashData hashData, const struct rs2_intrinsics * dev_intrin) {
 	const HashParams& hashParams = c_hashParams;
 	const unsigned int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	__shared__ int localCounter;

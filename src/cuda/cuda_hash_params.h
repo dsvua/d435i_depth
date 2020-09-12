@@ -4,9 +4,9 @@
 #include "cuda_simple_matrix_math.h"
 
 //TODO might have to be split into static and dynamics
-	//has to be aligned to 16 bytes
-// struct __align__(16) HashParams {
-struct HashParams {
+//has to be aligned to 16 bytes
+// struct HashParams {
+struct __align__(16) HashParams {
 	HashParams() {
 	}
 
