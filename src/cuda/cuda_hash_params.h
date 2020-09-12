@@ -5,7 +5,8 @@
 
 //TODO might have to be split into static and dynamics
 	//has to be aligned to 16 bytes
-struct __align__(16) HashParams {
+// struct __align__(16) HashParams {
+struct HashParams {
 	HashParams() {
 	}
 
@@ -22,6 +23,7 @@ struct __align__(16) HashParams {
 	unsigned int	m_numOccupiedBlocks;	//occupied blocks in the viewing frustum
 	
 	float			m_maxIntegrationDistance;
+	float			m_minIntegrationDistance;
 	float			m_truncScale;
 	float			m_truncation;
 	unsigned int	m_integrationWeightSample;

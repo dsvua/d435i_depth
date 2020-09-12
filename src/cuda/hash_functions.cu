@@ -1,96 +1,7 @@
-#include "hash_functions.h"
+// #include "CudaPipeline.h"
 #include "cutil_math.h"
-#include "helper_cuda.h"
+#include "hash_functions.h"
 #include "helper_math.h"
-
-__host__
-void HashData::allocate(const HashParams& params, bool dataOnGPU) {
-    m_bIsOnGPU = dataOnGPU;
-    if (m_bIsOnGPU) {
-        checkCudaErrors(cudaMalloc(&d_heap, sizeof(unsigned int) * params.m_numSDFBlocks));
-        checkCudaErrors(cudaMalloc(&d_heapCounter, sizeof(unsigned int)));
-        checkCudaErrors(cudaMalloc(&d_hash, sizeof(HashEntry)* params.m_hashNumBuckets * params.m_hashBucketSize));
-        checkCudaErrors(cudaMalloc(&d_hashDecision, sizeof(int)* params.m_hashNumBuckets * params.m_hashBucketSize));
-        checkCudaErrors(cudaMalloc(&d_hashDecisionPrefix, sizeof(int)* params.m_hashNumBuckets * params.m_hashBucketSize));
-        checkCudaErrors(cudaMalloc(&d_hashCompactified, sizeof(HashEntry)* params.m_hashNumBuckets * params.m_hashBucketSize));
-        checkCudaErrors(cudaMalloc(&d_hashCompactifiedCounter, sizeof(int)));
-        checkCudaErrors(cudaMalloc(&d_SDFBlocks, sizeof(Voxel) * params.m_numSDFBlocks * params.m_SDFBlockSize*params.m_SDFBlockSize*params.m_SDFBlockSize));
-        checkCudaErrors(cudaMalloc(&d_hashBucketMutex, sizeof(int)* params.m_hashNumBuckets));
-    } else {
-        d_heap = new unsigned int[params.m_numSDFBlocks];
-        d_heapCounter = new unsigned int[1];
-        d_hash = new HashEntry[params.m_hashNumBuckets * params.m_hashBucketSize];
-        d_hashDecision = new int[params.m_hashNumBuckets * params.m_hashBucketSize];
-        d_hashDecisionPrefix = new int[params.m_hashNumBuckets * params.m_hashBucketSize];
-        d_hashCompactified = new HashEntry[params.m_hashNumBuckets * params.m_hashBucketSize];
-        d_hashCompactifiedCounter = new int[1];
-        d_SDFBlocks = new Voxel[params.m_numSDFBlocks * params.m_SDFBlockSize*params.m_SDFBlockSize*params.m_SDFBlockSize];
-        d_hashBucketMutex = new int[params.m_hashNumBuckets];
-    }
-
-    updateParams(params);
-}
-
-__host__
-void HashData::updateParams(const HashParams& params) {
-    if (m_bIsOnGPU) {
-        updateConstantHashParams(params);
-    } 
-}
-
-__host__
-void HashData::free() {
-    if (m_bIsOnGPU) {
-        checkCudaErrors(cudaFree(d_heap));
-        checkCudaErrors(cudaFree(d_heapCounter));
-        checkCudaErrors(cudaFree(d_hash));
-        checkCudaErrors(cudaFree(d_hashDecision));
-        checkCudaErrors(cudaFree(d_hashDecisionPrefix));
-        checkCudaErrors(cudaFree(d_hashCompactified));
-        checkCudaErrors(cudaFree(d_hashCompactifiedCounter));
-        checkCudaErrors(cudaFree(d_SDFBlocks));
-        checkCudaErrors(cudaFree(d_hashBucketMutex));
-    } else {
-        if (d_heap) delete[] d_heap;
-        if (d_heapCounter) delete[] d_heapCounter;
-        if (d_hash) delete[] d_hash;
-        if (d_hashDecision) delete[] d_hashDecision;
-        if (d_hashDecisionPrefix) delete[] d_hashDecisionPrefix;
-        if (d_hashCompactified) delete[] d_hashCompactified;
-        if (d_hashCompactifiedCounter) delete[] d_hashCompactifiedCounter;
-        if (d_SDFBlocks) delete[] d_SDFBlocks;
-        if (d_hashBucketMutex) delete[] d_hashBucketMutex;
-    }
-
-    d_hash = NULL;
-    d_heap = NULL;
-    d_heapCounter = NULL;
-    d_hashDecision = NULL;
-    d_hashDecisionPrefix = NULL;
-    d_hashCompactified = NULL;
-    d_hashCompactifiedCounter = NULL;
-    d_SDFBlocks = NULL;
-    d_hashBucketMutex = NULL;
-}
-
-__host__
-HashData HashData::copyToCPU() const {
-    HashParams params;
-    
-    HashData hashData;
-    hashData.allocate(params, false);	//allocate the data on the CPU
-    checkCudaErrors(cudaMemcpy(hashData.d_heap, d_heap, sizeof(unsigned int) * params.m_numSDFBlocks, cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(hashData.d_heapCounter, d_heapCounter, sizeof(unsigned int), cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(hashData.d_hash, d_hash, sizeof(HashEntry)* params.m_hashNumBuckets * params.m_hashBucketSize, cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(hashData.d_hashDecision, d_hashDecision, sizeof(int)*params.m_hashNumBuckets * params.m_hashBucketSize, cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(hashData.d_hashDecisionPrefix, d_hashDecisionPrefix, sizeof(int)*params.m_hashNumBuckets * params.m_hashBucketSize, cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(hashData.d_hashCompactified, d_hashCompactified, sizeof(HashEntry)* params.m_hashNumBuckets * params.m_hashBucketSize, cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(hashData.d_hashCompactifiedCounter, d_hashCompactifiedCounter, sizeof(unsigned int), cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(hashData.d_SDFBlocks, d_SDFBlocks, sizeof(Voxel) * params.m_numSDFBlocks * params.m_SDFBlockSize*params.m_SDFBlockSize*params.m_SDFBlockSize, cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaMemcpy(hashData.d_hashBucketMutex, d_hashBucketMutex, sizeof(int)* params.m_hashNumBuckets, cudaMemcpyDeviceToHost));
-    
-    return hashData;
-}
 
 __device__
 const HashParams& HashData::params() const {
@@ -185,12 +96,6 @@ __device__
 int3 HashData::worldToSDFBlock(const float3& worldPos) const	{
     return virtualVoxelPosToSDFBlock(worldToVirtualVoxelPos(worldPos));
 }
-
-// __device__
-// bool isSDFBlockInCameraFrustumApprox(const int3& sdfBlock) {
-// 	float3 posWorld = virtualVoxelPosToWorld(SDFBlockToVirtualVoxelPos(sdfBlock)) + c_hashParams.m_virtualVoxelSize * 0.5f * (SDF_BLOCK_SIZE - 1.0f);
-// 	return DepthCameraData::isInCameraFrustumApprox(c_hashParams.m_rigidTransformInverse, posWorld);
-// }
 
 //! computes the (local) virtual voxel pos of an index; idx in [0;511]
 __device__ 
@@ -667,3 +572,24 @@ bool HashData::deleteHashEntryElement(const int3& sdfBlock) {
     }
     return false;
 };
+
+__device__
+bool HashData::isSDFBlockInCameraFrustumApprox(const int3& sdfBlock, const struct rs2_intrinsics * dev_intrin) {
+    float3 posWorld = virtualVoxelPosToWorld(SDFBlockToVirtualVoxelPos(sdfBlock)) + c_hashParams.m_virtualVoxelSize * 0.5f * (SDF_BLOCK_SIZE - 1.0f);
+    float3 pCamera = c_hashParams.m_rigidTransformInverse * posWorld;
+    float2 proj = make_float2(
+        pCamera.x*dev_intrin->fx/pCamera.z + dev_intrin->ppx,			
+        pCamera.y*dev_intrin->fy/pCamera.z + dev_intrin->ppy);
+
+    float3 pProj = make_float3(proj.x, proj.y, pCamera.z);
+
+    pProj.x = (2.0f*pProj.x - (dev_intrin->width - 1.0f))/(dev_intrin->width - 1.0f);
+    pProj.y = ((dev_intrin->height-1.0f) - 2.0f*pProj.y)/(dev_intrin->height-1.0f);
+    pProj.z = (pProj.z - DEPTH_WORLD_MIN)/(DEPTH_WORLD_MAX - DEPTH_WORLD_MIN);
+
+    pProj *= 0.95;
+    return !(pProj.x < -1.0f || pProj.x > 1.0f || pProj.y < -1.0f || pProj.y > 1.0f || pProj.z < 0.0f || pProj.z > 1.0f);  
+
+}
+
+

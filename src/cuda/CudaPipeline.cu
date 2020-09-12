@@ -12,8 +12,11 @@
 #include "cuda_hash_params.h"
 #include "hash_functions.h"
 
-int CudaPipeline::get_cuda_device(int argc, char **argv)
+int CudaPipeline::init_cuda_device(int argc, char **argv)
 {
+    checkCudaErrors(cudaMalloc(&dev_intrin, sizeof(rs2_intrinsics)));
+    checkCudaErrors(cudaMemcpy(dev_intrin, &_intristics, sizeof(rs2_intrinsics), cudaMemcpyHostToDevice));
+
     return findCudaDevice(argc, (const char **)argv);
 }
 
@@ -26,12 +29,8 @@ void CudaPipeline::process_depth(rs2::depth_frame depth_frame)
     uint16_t *depth_data = (uint16_t *)depth_frame.get_data();
     uint16_t *dev_depth = 0;
     float *dev_points = 0;
-    rs2_intrinsics* dev_intrin = 0;
 
     checkCudaErrors(cudaMalloc(&dev_points, count * sizeof(float) * 3));
-
-    checkCudaErrors(cudaMalloc(&dev_intrin, sizeof(rs2_intrinsics)));
-    checkCudaErrors(cudaMemcpy(dev_intrin, &_intristics, sizeof(rs2_intrinsics), cudaMemcpyHostToDevice));
 
     checkCudaErrors(cudaMalloc(reinterpret_cast<void **>(&dev_depth), count * sizeof(uint16_t)));
     checkCudaErrors(cudaMemcpy(dev_depth, depth_data, count * sizeof(uint16_t), cudaMemcpyHostToDevice));
@@ -50,5 +49,14 @@ void CudaPipeline::process_depth(rs2::depth_frame depth_frame)
     };
 
     std::cout << "Points cloud is downloaded to host" << std::endl;
+
+    // reconstruction begins
+    float4x4 transformation = float4x4::identity();
+
+    if (m_numIntegratedFrames > 0){
+        // need to find rotation first
+    }
+
+    integrate(transformation, dev_depth);
 
 }

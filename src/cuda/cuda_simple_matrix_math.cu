@@ -618,11 +618,6 @@ inline __device__ __host__ float3x4 float3x4::operator*(const float3x4 &other) c
     res.m33 = m31*other.m13 + m32*other.m23 + m33*other.m33; 
     res.m34 = m31*other.m14 + m32*other.m24 + m33*other.m34 + m34;
 
-    //res.m41 = m41*other.m11 + m42*other.m21 + m43*other.m31 + m44*other.m41;  
-    //res.m42 = m41*other.m12 + m42*other.m22 + m43*other.m32 + m44*other.m42;  
-    //res.m43 = m41*other.m13 + m42*other.m23 + m43*other.m33 + m44*other.m43; 
-    //res.m44 = m41*other.m14 + m42*other.m24 + m43*other.m34 + m44*other.m44;
-    
     return res;
 }
 
@@ -729,13 +724,6 @@ inline __device__ __host__ float4x4::float4x4(const float values[16]) {
     m41 = values[12];	m42 = values[13];	m43 = values[14];	m44 = values[15];
 }
 
-// inline __device__ __host__ float4x4::float4x4(const float4x4& other) {
-//     m11 = other.m11;	m12 = other.m12;	m13 = other.m13;	m14 = other.m14;
-//     m21 = other.m21;	m22 = other.m22;	m23 = other.m23;	m24 = other.m24;
-//     m31 = other.m31;	m32 = other.m32;	m33 = other.m33;	m34 = other.m34;
-//     m41 = other.m41;	m42 = other.m42;	m43 = other.m43;	m44 = other.m44;
-// }
-
 //implicitly assumes last line to (0,0,0,1)
 inline __device__ __host__ float4x4::float4x4(const float3x4& other) {
     m11 = other.m11;	m12 = other.m12;	m13 = other.m13;	m14 = other.m14;
@@ -751,29 +739,29 @@ inline __device__ __host__ float4x4::float4x4(const float3x3& other) {
     m41 = 0.0f;			m42 = 0.0f;			m43 = 0.0f;			m44 = 1.0f;
 }
 
-inline __device__ __host__ float4x4 float4x4::operator=(const float4x4 &other) {
-    m11 = other.m11;	m12 = other.m12;	m13 = other.m13;	m14 = other.m14;
-    m21 = other.m21;	m22 = other.m22;	m23 = other.m23;	m24 = other.m24;
-    m31 = other.m31;	m32 = other.m32;	m33 = other.m33;	m34 = other.m34;
-    m41 = other.m41;	m42 = other.m42;	m43 = other.m43;	m44 = other.m44;
-    return *this;
-}
+// inline __device__ __host__ float4x4 float4x4::operator=(const float4x4 &other) {
+//     m11 = other.m11;	m12 = other.m12;	m13 = other.m13;	m14 = other.m14;
+//     m21 = other.m21;	m22 = other.m22;	m23 = other.m23;	m24 = other.m24;
+//     m31 = other.m31;	m32 = other.m32;	m33 = other.m33;	m34 = other.m34;
+//     m41 = other.m41;	m42 = other.m42;	m43 = other.m43;	m44 = other.m44;
+//     return *this;
+// }
 
-inline __device__ __host__ float4x4 float4x4::operator=(const float3x4 &other) {
-    m11 = other.m11;	m12 = other.m12;	m13 = other.m13;	m14 = other.m14;
-    m21 = other.m21;	m22 = other.m22;	m23 = other.m23;	m24 = other.m24;
-    m31 = other.m31;	m32 = other.m32;	m33 = other.m33;	m34 = other.m34;
-    m41 = 0.0f;			m42 = 0.0f;			m43 = 0.0f;			m44 = 1.0f;
-    return *this;
-}
+// inline __device__ __host__ float4x4 float4x4::operator=(const float3x4 &other) {
+//     m11 = other.m11;	m12 = other.m12;	m13 = other.m13;	m14 = other.m14;
+//     m21 = other.m21;	m22 = other.m22;	m23 = other.m23;	m24 = other.m24;
+//     m31 = other.m31;	m32 = other.m32;	m33 = other.m33;	m34 = other.m34;
+//     m41 = 0.0f;			m42 = 0.0f;			m43 = 0.0f;			m44 = 1.0f;
+//     return *this;
+// }
 
-inline __device__ __host__ float4x4& float4x4::operator=(const float3x3 &other) {
-    m11 = other.m11;	m12 = other.m12;	m13 = other.m13;	m14 = 0.0f;
-    m21 = other.m21;	m22 = other.m22;	m23 = other.m23;	m24 = 0.0f;
-    m31 = other.m31;	m32 = other.m32;	m33 = other.m33;	m34 = 0.0f;
-    m41 = 0.0f;			m42 = 0.0f;			m43 = 0.0f;			m44 = 1.0f;
-    return *this;
-}
+// inline __device__ __host__ float4x4& float4x4::operator=(const float3x3 &other) {
+//     m11 = other.m11;	m12 = other.m12;	m13 = other.m13;	m14 = 0.0f;
+//     m21 = other.m21;	m22 = other.m22;	m23 = other.m23;	m24 = 0.0f;
+//     m31 = other.m31;	m32 = other.m32;	m33 = other.m33;	m34 = 0.0f;
+//     m41 = 0.0f;			m42 = 0.0f;			m43 = 0.0f;			m44 = 1.0f;
+//     return *this;
+// }
 
 //! not tested
 inline __device__ __host__ float4x4 float4x4::operator*(const float4x4 &other) const {
@@ -812,16 +800,6 @@ inline __device__ __host__ float4 float4x4::operator*(const float4& v) const
         );
 }
 
-// untested
-//implicitly assumes w to be 1
-inline __device__ __host__ float3 float4x4::operator*(const float3& v) const
-{
-    return make_float3(
-        m11*v.x + m12*v.y + m13*v.z + m14*1.0f,
-        m21*v.x + m22*v.y + m23*v.z + m24*1.0f,
-        m31*v.x + m32*v.y + m33*v.z + m34*1.0f
-        );
-}
 
 inline __device__ __host__ float& float4x4::operator()(int i, int j) {
     return entries2[i][j];
@@ -857,133 +835,7 @@ inline __device__ __host__ void float4x4::invert() {
     *this = getInverse();
 }
 
-//! return the inverse matrix; but does not change the current matrix
-inline __device__ __host__ float4x4 float4x4::getInverse() const {
-    float inv[16];
 
-    inv[0] = entries[5]  * entries[10] * entries[15] - 
-        entries[5]  * entries[11] * entries[14] - 
-        entries[9]  * entries[6]  * entries[15] + 
-        entries[9]  * entries[7]  * entries[14] +
-        entries[13] * entries[6]  * entries[11] - 
-        entries[13] * entries[7]  * entries[10];
-
-    inv[4] = -entries[4]  * entries[10] * entries[15] + 
-        entries[4]  * entries[11] * entries[14] + 
-        entries[8]  * entries[6]  * entries[15] - 
-        entries[8]  * entries[7]  * entries[14] - 
-        entries[12] * entries[6]  * entries[11] + 
-        entries[12] * entries[7]  * entries[10];
-
-    inv[8] = entries[4]  * entries[9] * entries[15] - 
-        entries[4]  * entries[11] * entries[13] - 
-        entries[8]  * entries[5] * entries[15] + 
-        entries[8]  * entries[7] * entries[13] + 
-        entries[12] * entries[5] * entries[11] - 
-        entries[12] * entries[7] * entries[9];
-
-    inv[12] = -entries[4]  * entries[9] * entries[14] + 
-        entries[4]  * entries[10] * entries[13] +
-        entries[8]  * entries[5] * entries[14] - 
-        entries[8]  * entries[6] * entries[13] - 
-        entries[12] * entries[5] * entries[10] + 
-        entries[12] * entries[6] * entries[9];
-
-    inv[1] = -entries[1]  * entries[10] * entries[15] + 
-        entries[1]  * entries[11] * entries[14] + 
-        entries[9]  * entries[2] * entries[15] - 
-        entries[9]  * entries[3] * entries[14] - 
-        entries[13] * entries[2] * entries[11] + 
-        entries[13] * entries[3] * entries[10];
-
-    inv[5] = entries[0]  * entries[10] * entries[15] - 
-        entries[0]  * entries[11] * entries[14] - 
-        entries[8]  * entries[2] * entries[15] + 
-        entries[8]  * entries[3] * entries[14] + 
-        entries[12] * entries[2] * entries[11] - 
-        entries[12] * entries[3] * entries[10];
-
-    inv[9] = -entries[0]  * entries[9] * entries[15] + 
-        entries[0]  * entries[11] * entries[13] + 
-        entries[8]  * entries[1] * entries[15] - 
-        entries[8]  * entries[3] * entries[13] - 
-        entries[12] * entries[1] * entries[11] + 
-        entries[12] * entries[3] * entries[9];
-
-    inv[13] = entries[0]  * entries[9] * entries[14] - 
-        entries[0]  * entries[10] * entries[13] - 
-        entries[8]  * entries[1] * entries[14] + 
-        entries[8]  * entries[2] * entries[13] + 
-        entries[12] * entries[1] * entries[10] - 
-        entries[12] * entries[2] * entries[9];
-
-    inv[2] = entries[1]  * entries[6] * entries[15] - 
-        entries[1]  * entries[7] * entries[14] - 
-        entries[5]  * entries[2] * entries[15] + 
-        entries[5]  * entries[3] * entries[14] + 
-        entries[13] * entries[2] * entries[7] - 
-        entries[13] * entries[3] * entries[6];
-
-    inv[6] = -entries[0]  * entries[6] * entries[15] + 
-        entries[0]  * entries[7] * entries[14] + 
-        entries[4]  * entries[2] * entries[15] - 
-        entries[4]  * entries[3] * entries[14] - 
-        entries[12] * entries[2] * entries[7] + 
-        entries[12] * entries[3] * entries[6];
-
-    inv[10] = entries[0]  * entries[5] * entries[15] - 
-        entries[0]  * entries[7] * entries[13] - 
-        entries[4]  * entries[1] * entries[15] + 
-        entries[4]  * entries[3] * entries[13] + 
-        entries[12] * entries[1] * entries[7] - 
-        entries[12] * entries[3] * entries[5];
-
-    inv[14] = -entries[0]  * entries[5] * entries[14] + 
-        entries[0]  * entries[6] * entries[13] + 
-        entries[4]  * entries[1] * entries[14] - 
-        entries[4]  * entries[2] * entries[13] - 
-        entries[12] * entries[1] * entries[6] + 
-        entries[12] * entries[2] * entries[5];
-
-    inv[3] = -entries[1] * entries[6] * entries[11] + 
-        entries[1] * entries[7] * entries[10] + 
-        entries[5] * entries[2] * entries[11] - 
-        entries[5] * entries[3] * entries[10] - 
-        entries[9] * entries[2] * entries[7] + 
-        entries[9] * entries[3] * entries[6];
-
-    inv[7] = entries[0] * entries[6] * entries[11] - 
-        entries[0] * entries[7] * entries[10] - 
-        entries[4] * entries[2] * entries[11] + 
-        entries[4] * entries[3] * entries[10] + 
-        entries[8] * entries[2] * entries[7] - 
-        entries[8] * entries[3] * entries[6];
-
-    inv[11] = -entries[0] * entries[5] * entries[11] + 
-        entries[0] * entries[7] * entries[9] + 
-        entries[4] * entries[1] * entries[11] - 
-        entries[4] * entries[3] * entries[9] - 
-        entries[8] * entries[1] * entries[7] + 
-        entries[8] * entries[3] * entries[5];
-
-    inv[15] = entries[0] * entries[5] * entries[10] - 
-        entries[0] * entries[6] * entries[9] - 
-        entries[4] * entries[1] * entries[10] + 
-        entries[4] * entries[2] * entries[9] + 
-        entries[8] * entries[1] * entries[6] - 
-        entries[8] * entries[2] * entries[5];
-
-    float matrixDet = entries[0] * inv[0] + entries[1] * inv[4] + entries[2] * inv[8] + entries[3] * inv[12];
-
-    float matrixDetr = 1.0f / matrixDet;
-
-    float4x4 res;
-    for (unsigned int i = 0; i < 16; i++) {
-        res.entries[i] = inv[i] * matrixDetr;
-    }
-    return res;
-
-}
 
 //! returns the 3x3 part of the matrix
 inline __device__ __host__ float3x3 float4x4::getFloat3x3() {
@@ -999,15 +851,6 @@ inline __device__ __host__ void float4x4::setFloat3x3(const float3x3 &other) {
     m11 = other.m11;	m12 = other.m12;	m13 = other.m13;
     m21 = other.m21;	m22 = other.m22;	m23 = other.m23;
     m31 = other.m31;	m32 = other.m32;	m33 = other.m33;
-}
-
-//! sets the 4x4 part of the matrix to identity
-inline __device__ __host__ void float4x4::setIdentity()
-{
-    m11 = 1.0f;	m12 = 0.0f;	m13 = 0.0f;	m14 = 0.0f;
-    m21 = 0.0f;	m22 = 1.0f;	m23 = 0.0f;	m24 = 0.0f;
-    m31 = 0.0f;	m32 = 0.0f;	m33 = 1.0f;	m34 = 0.0f;
-    m41 = 0.0f;	m42 = 0.0f;	m43 = 0.0f;	m44 = 1.0f;
 }
 
 //! sets the 4x4 part of the matrix to identity
@@ -1042,39 +885,6 @@ inline __device__ __host__ const float* float4x4::ptr() const {
 inline __device__ __host__ float* float4x4::ptr() {
     return entries;
 }
-
-//////////////////////////////
-// matNxM
-//////////////////////////////
-
-// template<unsigned int N, unsigned int M>
-// inline __device__ bool matNxM::checkMINF() const
-// {
-//     for(unsigned int i = 0; i<N; i++)
-//     {
-//         for(unsigned int j = 0; j<M; j++)
-//         {
-//             if((*this)(i, j) == MINF) return true;
-//         }
-//     }
-
-//     return false;
-// }
-
-// template<unsigned int N, unsigned int M>
-// inline __device__ bool matNxM::checkINF() const
-// {
-//     for(unsigned int i = 0; i<N; i++)
-//     {
-//         for(unsigned int j = 0; j<M; j++)
-//         {
-//             if((*this)(i, j) == INF) return true;
-//         }
-//     }
-
-//     return false;
-// }
-
 
 
 
