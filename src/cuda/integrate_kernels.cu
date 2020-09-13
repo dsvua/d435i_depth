@@ -60,15 +60,12 @@ __global__ void allocKernel(HashData hashData, const uint16_t * depth, const str
 		float maxDepth = min(hashParams.m_maxIntegrationDistance, d+t);
 		if (minDepth >= maxDepth) return;
 
-        const float pixel[] = { (float)x, (float)y };
-        float point[3];
-
+		float3 rayMin;
         // reusing librealsense cuda kernel to calc point cloud
-        deproject_pixel_to_point_cuda(point, dev_intrin, pixel, minDepth);
-		float3 rayMin = make_float3((float)point[0], (float)point[1], (float)point[2]);
+        deproject_pixel_to_point_cuda(&rayMin, dev_intrin, make_float2((float)x, (float)y), minDepth);
 		rayMin = hashParams.m_rigidTransform * rayMin;
-        deproject_pixel_to_point_cuda(point, dev_intrin, pixel, minDepth);
-		float3 rayMax = make_float3((float)point[0], (float)point[1], (float)point[2]);
+		float3 rayMax
+        deproject_pixel_to_point_cuda(&rayMax, dev_intrin, make_float2((float)x, (float)y), maxDepth);
 		rayMax = hashParams.m_rigidTransform * rayMax;
 		
 		float3 rayDir = normalize(rayMax - rayMin);

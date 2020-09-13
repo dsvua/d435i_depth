@@ -75,7 +75,7 @@ struct __align__(8) Voxel {
 	}
 
 };
-extern  __constant__ HashParams c_hashParams;
+extern __constant__ HashParams c_hashParams;
 void updateConstantHashParams(const HashParams& hashParams);
 
 struct HashData {
