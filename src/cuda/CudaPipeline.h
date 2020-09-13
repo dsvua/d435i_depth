@@ -64,7 +64,7 @@ class CudaPipeline {
         };
 
         void process_depth(rs2::depth_frame depth_frame);
-        void integrate(const float4x4& lastRigidTransform, const uint16_t * dev_depth);
+        void integrate(const float4x4& lastRigidTransform, const float * dev_depth);
 
         bool download_points = false;
         float *host_points = 0;
@@ -99,8 +99,9 @@ class CudaPipeline {
         int init_cuda_device(int argc, char **argv);
         void setLastRigidTransform(const float4x4& lastRigidTransform);
         void render();
-        void computeNormals(float4* d_output, float4* d_input, unsigned int width, unsigned int height);
-        
+        void computeNormals(float3* d_output, float3* d_input, unsigned int width, unsigned int height);
+        void resampleFloat3Map(float3* d_output, unsigned int outputWidth, unsigned int outputHeight,
+                float3* d_input, unsigned int inputWidth, unsigned int inputHeight)
 
 };
 

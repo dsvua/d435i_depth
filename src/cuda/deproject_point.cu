@@ -4,6 +4,9 @@
 #include "deproject_point.h"
 #include "CudaPipeline.h"
 
+#ifndef MINF
+#define MINF __int_as_float(0xff800000)
+#endif
 
 __device__
 void deproject_pixel_to_point_cuda(float3 * point, const struct rs2_intrinsics * intrin, const float2 pixel, float depth) {
@@ -27,7 +30,7 @@ void deproject_pixel_to_point_cuda(float3 * point, const struct rs2_intrinsics *
 }
 
 __global__
-void kernel_deproject_depth_cuda(float3 * points, const rs2_intrinsics* intrin, const uint16_t * depth, 
+void kernel_deproject_depth_cuda(float3 * points, const rs2_intrinsics* intrin, const uint16_t * depth, float * depth_f, 
     const int minDepth, const int maxDepth) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
     
@@ -42,9 +45,12 @@ void kernel_deproject_depth_cuda(float3 * points, const rs2_intrinsics* intrin, 
         a = j - b * (*intrin).width;
         const float2 pixel = make_float2(a, b);
         if (depth[j] > maxDepth || depth[j] < minDepth){
+            depth_f[j] = MINF;
             deproject_pixel_to_point_cuda(points + j, intrin, pixel, 0);               
         } else {
-            deproject_pixel_to_point_cuda(points + j, intrin, pixel, depth[j]);               
+            depth_f[j] = (float)depth[j] / 1000.0f; // convert mm to meter
+            deproject_pixel_to_point_cuda(points + j, intrin, pixel, depth_f[j]);               
         }
     }
 }
+

@@ -4,7 +4,7 @@
 #include "helper_cuda.h"
 #include "integrate_kernels.h"
 
-void CudaPipeline::integrate(const float4x4& lastRigidTransform, const uint16_t * dev_depth) {
+void CudaPipeline::integrate(const float4x4& lastRigidTransform, const float * dev_depth_f) {
 
     setLastRigidTransform(lastRigidTransform);
 		
@@ -23,7 +23,7 @@ void CudaPipeline::integrate(const float4x4& lastRigidTransform, const uint16_t 
     //this version is faster, but it doesn't guarantee that all blocks are allocated (staggers alloc to the next frame)    
 	dim3 gridSize((_intristics.width + T_PER_BLOCK - 1)/T_PER_BLOCK, (_intristics.height + T_PER_BLOCK - 1)/T_PER_BLOCK);
 	dim3 blockSize(T_PER_BLOCK, T_PER_BLOCK);
-	allocKernel<<<gridSize, blockSize>>>(m_hashData, dev_depth, dev_intrin);
+	allocKernel<<<gridSize, blockSize>>>(m_hashData, dev_depth_f, dev_intrin);
     getLastCudaError("Failed: allocKernel");
 
     //generate a linear hash array with only occupied entries
@@ -49,7 +49,7 @@ void CudaPipeline::integrate(const float4x4& lastRigidTransform, const uint16_t 
 	blockSize = dim3(threadsPerBlock, 1);
 
 	if (m_hashParams.m_numOccupiedBlocks > 0) {	//this guard is important if there is no depth in the current frame (i.e., no blocks were allocated)
-		integrateDepthMapKernel << <gridSize, blockSize >> >(m_hashData, dev_depth, dev_intrin);
+		integrateDepthMapKernel << <gridSize, blockSize >> >(m_hashData, dev_depth_f, dev_intrin);
         getLastCudaError("Failed: integrateDepthMapKernel");
     };
     

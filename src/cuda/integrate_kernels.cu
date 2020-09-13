@@ -41,7 +41,7 @@ __global__ void resetHashKernel(HashData hashData)
 	}
 }
 
-__global__ void allocKernel(HashData hashData, const uint16_t * depth, const struct rs2_intrinsics * dev_intrin) {
+__global__ void allocKernel(HashData hashData, const float * depth, const struct rs2_intrinsics * dev_intrin) {
 	const HashParams& hashParams = c_hashParams;
 
 	const unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
@@ -49,7 +49,7 @@ __global__ void allocKernel(HashData hashData, const uint16_t * depth, const str
 	
 	if (x < dev_intrin->width && y < dev_intrin->height) {
 
-		float d = (float)depth[y*dev_intrin->width + x] / 1000; // convert mm to meter
+		float d = depth[y*dev_intrin->width + x]; // convert mm to meter
 		
 		if (d < hashParams.m_minIntegrationDistance)	return;
 
@@ -215,7 +215,7 @@ __global__ void compactifyHashAllInOneKernel(HashData hashData, const struct rs2
 	}
 }
 
-__global__ void integrateDepthMapKernel(HashData hashData, const uint16_t * depth, const struct rs2_intrinsics * dev_intrin) {
+__global__ void integrateDepthMapKernel(HashData hashData, const float * depth, const struct rs2_intrinsics * dev_intrin) {
 	const HashParams& hashParams = c_hashParams;
 
 	const HashEntry& entry = hashData.d_hashCompactified[blockIdx.x];

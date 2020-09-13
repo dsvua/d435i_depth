@@ -1,8 +1,5 @@
 #include <vector> // for 2D vector
+#include <cuda_runtime.h>
 
-struct Point{
-    float x, y, z;
-};
-
-std::vector<Point> convertFloatPointsToVectorPoint(float *_points, int count);
-void writeToPly(std::vector<Point> points, const char* fileName);
+std::vector<float3> convertFloatPointsToVectorPoint(float3 *_points, int count);
+void writeToPly(std::vector<float3> points, const char* fileName);

@@ -10,13 +10,13 @@
 
 using namespace std;
 
-vector<Point> convertFloatPointsToVectorPoint(float *_points, int count){
-    vector<Point> points;
+vector<float3> convertFloatPointsToVectorPoint(float3 *_points, int count){
+    vector<float3> points;
     for(int i=0; i<count; i++){
         Point point;
-        point.x = _points[i*3];
-        point.y = _points[i*3+1];
-        point.z = _points[i*3+2];
+        point.x = _points[i].x;
+        point.y = _points[i].x;
+        point.z = _points[i].x;
         if (point.z > 0){
             points.push_back(point);
         }
@@ -25,7 +25,7 @@ vector<Point> convertFloatPointsToVectorPoint(float *_points, int count){
 };
 
 //Write to Ply file
-void writeToPly(vector<Point> points, const char* fileName){
+void writeToPly(vector<float3> points, const char* fileName){
     
     string s = "ply\nformat ascii 1.0\nelement vertex "+to_string(points.size())+"\nproperty float x\nproperty float y\nproperty float z\nend_header\n";
     FILE * bfile;

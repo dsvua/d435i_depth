@@ -27,8 +27,7 @@
 #endif
 
 
-__global__ void renderKernel(HashData hashData, RayCastData rayCastData, const struct rs2_intrinsics * dev_intrin) 
-{
+__global__ void renderKernel(HashData hashData, RayCastData rayCastData, const struct rs2_intrinsics * dev_intrin) {
 	const unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
 	const unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
 
@@ -56,10 +55,10 @@ __global__ void renderKernel(HashData hashData, RayCastData rayCastData, const s
 		if (minInterval == 0 || minInterval == MINF) return;
 		if (maxInterval == 0 || maxInterval == MINF) return;
 
-		rayCastData.traverseCoarseGridSimpleSampleAll(hashData, worldCamPos, worldDir, camDir, make_int3(x,y,1), minInterval, maxInterval, dev_intrin);
+        rayCastData.traverseCoarseGridSimpleSampleAll(hashData, worldCamPos, worldDir, camDir, make_int3(x,y,1), 
+                    minInterval, maxInterval, dev_intrin);
 	} 
 }
-
 
 void CudaPipeline::render() {
 	// rayIntervalSplatting(hashData, hashParams, cameraData, lastRigidTransform);
@@ -81,5 +80,7 @@ void CudaPipeline::render() {
 
 
 	renderKernel<<<gridSize, blockSize>>>(hashData, m_rayCastData, dev_intrin);
+    getLastCudaError("Failed: renderKernel");
     computeNormalsDevice<<<gridSize, blockSize>>>(m_rayCastData.d_normals, m_rayCastData.dev_depth3, dev_intrin->width, dev_intrin->height);
+    getLastCudaError("Failed: computeNormalsDevice");
 }
