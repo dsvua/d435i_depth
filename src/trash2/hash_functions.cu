@@ -446,7 +446,7 @@ bool HashData::insertHashEntry(HashEntry entry)
     while (maxIter < g_MaxLoopIterCount) {									//traverse list until end // why find the end? we you are inserting at the start !!!
         //curr = getHashEntry(hash, i);
         curr = d_hash[i];	//TODO MATTHIAS do by reference
-        if (curr.offset == 0) break;									//we have found the end of the list
+        if (curr.offset == 0) break;									//m_hashNumBucketswe have found the end of the list
         i = idxLastEntryInBucket + curr.offset;							//go to next element in the list
         i %= (HASH_BUCKET_SIZE * c_hashParams.m_hashNumBuckets);	//check for overflow
 

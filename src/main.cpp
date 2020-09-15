@@ -24,7 +24,7 @@ int main(int argc, char * argv[]) try
     auto stream = p_p.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>();
     rs2_intrinsics intrinsics = stream.get_intrinsics(); // Calibration data
 
-    CudaPipeline cuda_pipeline = CudaPipeline(argc, argv, intrinsics);
+    SlamPipeline slamPipeline = SlamPipeline(intrinsics);
 
 
     // Capture 30 frames to give autoexposure, etc. a chance to settle
@@ -34,14 +34,14 @@ int main(int argc, char * argv[]) try
     rs2::frameset frames = p.wait_for_frames();
     rs2::depth_frame depth = frames.get_depth_frame();
     // std::cout << "upload_depth_to_cuda " << RS2_CUDA_THREADS_PER_BLOCK << std::endl;
-    cuda_pipeline.download_points=true;
-    cuda_pipeline.process_depth(depth);
-    cuda_pipeline.download_points=false;
+    // cuda_pipeline.download_points=true;
+    // cuda_pipeline.process_depth(depth);
+    // cuda_pipeline.download_points=false;
 
-    vector<Point> tmp_points = convertFloatPointsToVectorPoint(cuda_pipeline.host_points, intrinsics.height * intrinsics.width);
-    std::cout << "Points exported" << std::endl;
-    writeToPly(tmp_points, "test.ply");
-    std::cout << "Points written" << std::endl;
+    // vector<Point> tmp_points = convertFloatPointsToVectorPoint(cuda_pipeline.host_points, intrinsics.height * intrinsics.width);
+    // std::cout << "Points exported" << std::endl;
+    // writeToPly(tmp_points, "test.ply");
+    // std::cout << "Points written" << std::endl;
 
     // while (true)
     // {

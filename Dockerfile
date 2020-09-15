@@ -13,8 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     libglfw3-dev libgl1-mesa-dev libglu1-mesa-dev \
     xorg-dev libglu1-mesa-dev \
+    libeigen3-dev \
     libusb-1.0-0-dev \
-    wget \
+    wget vim \
+    libgl1-mesa-dev libglew-dev \
     git && \
     rm -rf /var/lib/apt/lists/*
 
