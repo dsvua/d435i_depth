@@ -13,7 +13,7 @@ using namespace std;
 vector<float3> convertFloatPointsToVectorPoint(float3 *_points, int count){
     vector<float3> points;
     for(int i=0; i<count; i++){
-        Point point;
+        float3 point;
         point.x = _points[i].x;
         point.y = _points[i].x;
         point.z = _points[i].x;

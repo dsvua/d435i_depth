@@ -1,0 +1,6 @@
+[submodule "external/eigen"]
+	path = external/eigen
+	url = https://gitlab.com/libeigen/eigen.git
+[submodule "external/Sophus"]
+	path = external/Sophus
+	url = https://github.com/strasdat/Sophus.git

@@ -10,10 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     glmark2 \
     build-essential \
     gdb \
-    cmake \
     libglfw3-dev libgl1-mesa-dev libglu1-mesa-dev \
     xorg-dev libglu1-mesa-dev \
-    libeigen3-dev \
     libusb-1.0-0-dev \
     wget vim \
     libgl1-mesa-dev libglew-dev \

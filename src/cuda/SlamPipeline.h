@@ -7,13 +7,14 @@
 class SlamPipeline{
     public:
         SlamPipeline(rs2_intrinsics intristics);
-        ~SlamPipeline();
+        // ~SlamPipeline();
 
     private:
-        VoxelHashMap        _d_voxelHashData;
-        VoxelHashMap        _h_voxelHashData;
-        rs2_intrinsics      _d_intristics;
-        rs2_intrinsics      _h_intristics;
-}
+        VoxelHashMap*   _d_voxelHashData;
+        VoxelHashMap*   _h_voxelHashData;
+
+        rs2_intrinsics* _d_intristics;
+        rs2_intrinsics  _h_intristics;
+};
 
 #endif

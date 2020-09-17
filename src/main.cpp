@@ -3,9 +3,9 @@
 
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
 #include <iostream>             // for cout
-#include "cuda/CudaPipeline.h"
+#include "cuda/SlamPipeline.h"
 #include <stdint.h> 
-#include "helperFunctions.h"
+// #include "helperFunctions.h"
 
 using namespace std;
 
