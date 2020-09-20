@@ -35,21 +35,21 @@ public:
   float lastError;
   float lastInliers;
 
-private:
-  std::vector<DeviceArray2D<unsigned short>> depth_tmp;
-
   std::vector<DeviceArray2D<float>> vmaps_prev;
   std::vector<DeviceArray2D<float>> nmaps_prev;
 
   std::vector<DeviceArray2D<float>> vmaps_curr;
   std::vector<DeviceArray2D<float>> nmaps_curr;
 
+  static const int NUM_PYRS = 3;
+
+private:
+  std::vector<DeviceArray2D<unsigned short>> depth_tmp;
+
   Intr intr;
 
   DeviceArray<Eigen::Matrix<float, 29, 1, Eigen::DontAlign>> sumData;
   DeviceArray<Eigen::Matrix<float, 29, 1, Eigen::DontAlign>> outData;
-
-  static const int NUM_PYRS = 3;
 
   std::vector<int> iterations;
 

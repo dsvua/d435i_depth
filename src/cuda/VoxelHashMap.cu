@@ -1,6 +1,6 @@
 #include "VoxelHashMap.h"
 #include "assert.h"
-// #include "safe_call.hpp"
+#include "safe_call.h"
 // #include <cmath>
 
 
@@ -49,35 +49,54 @@ void VoxelHashMap::initialize() {
 }
 
 __device__ __host__
-uint VoxelHashMap::computeHashPos(const int3& voxelPosition) {
-    int hash = (voxelPosition.x * params->p0 + voxelPosition.y * params->p1 + voxelPosition.z * params->p2) / params->voxelHashSize;
+uint VoxelHashMap::computeHashBlockPos(const Eigen::Vector3f voxelBlockWorldPos) {
+    int hash = (voxelBlockWorldPos.x() * params->p0 + voxelBlockWorldPos.y() * params->p1 + voxelBlockWorldPos.z() * params->p2) / params->voxelHashSize;
     // std::abs function have issues with cuda
     if (hash < 0) return (uint)(-hash);
     return (uint)hash;
 }
 
 __device__ __host__
-int3 VoxelHashMap::getVoxelWorldPosition(uint voxelIndexInBlock, int3 voxelBlockPos) {
-    int3 position = delinearizeVoxelPosition(voxelIndexInBlock);
-    position.x += voxelBlockPos.x;
-    position.y += voxelBlockPos.y;
-    position.z += voxelBlockPos.z;
+uint VoxelHashMap::computeHashWorldPos(const Eigen::Vector3f WorldPos) {
+    return computeHashBlockPos(voxelBlockPosFromWorldPos(WorldPos));
+}
+
+__device__ __host__
+Eigen::Vector3f VoxelHashMap::getVoxelWorldPosition(uint voxelIndexInBlock, Eigen::Vector3f voxelBlockWorldPos) {
+    Eigen::Vector3f position = delinearizeVoxelPosition(voxelIndexInBlock);
+    position.x() += voxelBlockWorldPos.x();
+    position.y() += voxelBlockWorldPos.y();
+    position.z() += voxelBlockWorldPos.z();
     return position;
 }
 
 __device__ __host__
-uint VoxelHashMap::linearizeVoxelPosition(int3 position) {
-    return  position.z * params->voxelBlockSize * params->voxelBlockSize +
-            position.y * params->voxelBlockSize +
-            position.x;
+uint VoxelHashMap::linearizeVoxelWorldPosition(Eigen::Vector3f deltaPos) {
+    int x = (int)deltaPos.x();
+    int y = (int)deltaPos.y();
+    int z = (int)deltaPos.z();
+    int d = (int)params->voxelPhysicalSize;
+
+    // if (x<0) x -= d;
+    // if (y<0) y -= d;
+    // if (z<0) z -= d;
+
+    return linearizeVoxelPosition(Eigen::Vector3f(x/d, y/d, z/d));
 }
 
 __device__ __host__
-int3 VoxelHashMap::delinearizeVoxelPosition(uint idx) {
-    int3 position;
-    position.x = idx % params->voxelBlockSize;
-    position.y = (idx % (params->voxelBlockSize * params->voxelBlockSize)) / params->voxelBlockSize * params->voxelBlockSize;
-    position.z = idx / (params->voxelBlockSize * params->voxelBlockSize);
+uint VoxelHashMap::linearizeVoxelPosition(Eigen::Vector3f position) {
+    return  position.z() * params->voxelBlockSize * params->voxelBlockSize +
+            position.y() * params->voxelBlockSize +
+            position.x();
+}
+
+__device__ __host__
+Eigen::Vector3f VoxelHashMap::delinearizeVoxelPosition(uint idx) {
+    Eigen::Vector3f position;
+    position.x() = idx % params->voxelBlockSize;
+    position.y() = (idx % (params->voxelBlockSize * params->voxelBlockSize)) / params->voxelBlockSize * params->voxelBlockSize;
+    position.z() = idx / (params->voxelBlockSize * params->voxelBlockSize);
     return position;
 }
 
@@ -92,44 +111,69 @@ void VoxelHashMap::combineVoxels(const Voxel &v0, const Voxel& v1, Voxel &out) {
 //! returns the max truncation distance of the SDF for a given distance value
 __device__ __host__
 float VoxelHashMap::getTruncation(float z) {
-    return params->truncationDistance + params->staticPartOfRMS * z;
+    return params->truncationDistance + params->staticPartOfRMS * z * z;
 }
 
 __device__ __host__
-VoxelHashEntry VoxelHashMap::getHashEntryByPosition(int3 worldPosition) {
-    uint idx = computeHashPos(worldPosition);
+int VoxelHashMap::getHashEntryByWordPosition(Eigen::Vector3f voxelBlockWorldPos) {
+    return getHashEntryByPosition(voxelBlockPosFromWorldPos(voxelBlockWorldPos));
+}
+
+    __device__ __host__
+int VoxelHashMap::getHashEntryByPosition(Eigen::Vector3f voxelBlockPos) {
+    uint idx = computeHashBlockPos(voxelBlockPos);
 
     // search in hash bucket
     for (int i=0; i < params->voxelHashBlockSize; i++) {
-        if (voxelsHash[idx+i].world_pos.x == worldPosition.x &&
-            voxelsHash[idx+i].world_pos.y == worldPosition.y &&
-            voxelsHash[idx+i].world_pos.z == worldPosition.z) {
+        if (voxelsHash[idx+i].world_pos.x() == voxelBlockPos.x() &&
+            voxelsHash[idx+i].world_pos.y() == voxelBlockPos.y() &&
+            voxelsHash[idx+i].world_pos.z() == voxelBlockPos.z()) {
             // found hashEntry, exit loop and return it
-            return voxelsHash[idx+i];
+            // return voxelsHash[idx+i];
+            return idx+i;
         }
     }
 
     // search over linked list
-    uint tmp_offset = voxelsHash[idx+params->voxelHashBlockSize-1].offset;
+    uint tmp_offset = voxelsHash[idx + params->voxelHashBlockSize-1].offset;
     while ((int)tmp_offset != NO_OFFSET) {
-        if (voxelsHash[tmp_offset].world_pos.x == worldPosition.x &&
-            voxelsHash[tmp_offset].world_pos.y == worldPosition.y &&
-            voxelsHash[tmp_offset].world_pos.z == worldPosition.z) {
+        if (voxelsHash[tmp_offset].world_pos.x() == voxelBlockPos.x() &&
+            voxelsHash[tmp_offset].world_pos.y() == voxelBlockPos.y() &&
+            voxelsHash[tmp_offset].world_pos.z() == voxelBlockPos.z()) {
             // found hashEntry, exit loop and return it
-            return voxelsHash[tmp_offset];
+            // return voxelsHash[tmp_offset];
+            return tmp_offset;
         }
         tmp_offset = voxelsHash[tmp_offset].offset;
     }
 
-    // did not find any, return empty VoxelHashEntry
-    VoxelHashEntry tmpVoxelHashEntry;
+    // // did not find any, allocate and return empty VoxelHashEntry and voxelBlock
+    // VoxelHashEntry tmp_entry = VoxelHashEntry();
+    // tmp_entry.world_pos = voxelBlockWorldPos;
+    // tmp_entry.voxelBlockIdx = getFreeVoxelBlock();
+    // // tmp_entry.world_pos = voxelBlockPosFromWorldPos(worldPosition);
 
-    return tmpVoxelHashEntry;
+    // return insertHashEntry(tmp_entry);
+    return FREE_ENTRY;
+}
+
+__device__ __host__
+Eigen::Vector3f VoxelHashMap::voxelBlockPosFromWorldPos(Eigen::Vector3f worldPosition) {
+    int x = (int)worldPosition.x();
+    int y = (int)worldPosition.y();
+    int z = (int)worldPosition.z();
+    int d = (int)params->voxelBlockSideSize;
+
+    if (x<0) x -= d;
+    if (y<0) y -= d;
+    if (z<0) z -= d;
+
+    return Eigen::Vector3f(x/d, y/d, z/d);
 }
 
 __device__ __host__
 void VoxelHashMap::deleteHashEntry(uint hashEntryIdx) {
-    deleteHashEntry(voxelsHash[hashEntryIdx]);
+    deleteHashEntry(voxelsHash[hashEntryIdx]); // need to send address, not value
 }
 
 __device__ __host__
@@ -140,13 +184,13 @@ void VoxelHashMap::deleteHashEntry(VoxelHashEntry& voxelHashEntry) {
 // #endif
 
     if (voxelHashEntry.offset == NO_OFFSET) {
-        voxelHashEntry.world_pos = make_int3(0,0,0);
+        voxelHashEntry.world_pos = Eigen::Vector3f(0,0,0);
         voxelHashEntry.voxelBlockIdx = FREE_ENTRY;
 		voxelHashEntry.offset = NO_OFFSET;
 
     } else {
         voxelHashEntry = voxelsHash[voxelHashEntry.offset];
-        voxelsHash[voxelHashEntry.offset].world_pos = make_int3(0,0,0);
+        voxelsHash[voxelHashEntry.offset].world_pos = Eigen::Vector3f(0,0,0);
         voxelsHash[voxelHashEntry.offset].voxelBlockIdx = FREE_ENTRY;
 		voxelsHash[voxelHashEntry.offset].offset = NO_OFFSET;
     }
@@ -158,11 +202,21 @@ void VoxelHashMap::deleteHashEntry(VoxelHashEntry& voxelHashEntry) {
 }
 
 __device__ __host__
-bool VoxelHashMap::insertHashEntry(VoxelHashEntry voxelHashEntry) {
-    uint idx = computeHashPos(voxelHashEntry.world_pos);
+int VoxelHashMap::insertHashEntry(VoxelHashEntry voxelHashEntry) {
+    uint idx = computeHashBlockPos(voxelHashEntry.world_pos);
 #ifdef __CUDA__ARCH__
     mutex_lock(idx);
 #endif
+    // check if it is already inserted
+    int t_idx = getHashEntryByPosition(voxelHashEntry.world_pos);
+
+    if (t_idx != FREE_ENTRY) {
+        // entry already exists return FAIL_TO_INSERT
+    #ifdef __CUDA__ARCH__
+        mutex_unlock(idx); //unlock before exiting loop
+    #endif
+        return FAIL_TO_INSERT;
+    }
     // search in hash bucket
     for (int i=0; i < params->voxelHashBlockSize; i++) {
         if (voxelsHash[idx+i].voxelBlockIdx == FREE_ENTRY) {
@@ -171,7 +225,7 @@ bool VoxelHashMap::insertHashEntry(VoxelHashEntry voxelHashEntry) {
         #ifdef __CUDA__ARCH__
             mutex_unlock(idx); //unlock before exiting loop
         #endif
-            return true;
+            return idx+i;
         }
     } //no free slot found, need to append to offset linked list
 
@@ -205,7 +259,7 @@ bool VoxelHashMap::insertHashEntry(VoxelHashEntry voxelHashEntry) {
                 mutex_unlock(tmp_newOffsetEntryIdx + i);
                 mutex_unlock(idx); //unlock before exiting loop
             #endif
-                return true;
+                return tmp_newOffsetEntryIdx + i;
             }
         }
         // checking next bucket
@@ -220,8 +274,8 @@ bool VoxelHashMap::insertHashEntry(VoxelHashEntry voxelHashEntry) {
 #ifdef __CUDA__ARCH__
     mutex_unlock(idx);
 #endif
-    // could not insert, return false - should never happens
-    return false;
+    // could not insert - should never happens
+    return FAIL_TO_INSERT;
 }
 
 #ifdef __CUDA__ARCH__
@@ -237,13 +291,15 @@ void VoxelHashMap::mutex_unlock(int idx) {
 #endif
 
 __device__
-void VoxelHashMap::toDeletedVoxelBlocks(uint voxelBlockIdx) {
+void VoxelHashMap::deleteVoxelBlocks(uint voxelBlockIdx) {
     uint addr = atomicAdd(&deletedVoxelBlocksLength, 1);
+    uint t_idx = voxelBlockIdx * params->voxelBlockSize;
     deletedVoxelBlocks[addr+1] = voxelBlockIdx;
+    for (int i=0; i<params->voxelBlockSize; i++) voxels[t_idx + i] = Voxel(); // resetting voxels in a block
 }
 
 __device__
-uint VoxelHashMap::fromDeletedVoxelBlocks() {
+uint VoxelHashMap::getFreeVoxelBlock() {
     uint addr = atomicSub(&deletedVoxelBlocksLength, 1);
     return deletedVoxelBlocks[addr];
 }

@@ -49,7 +49,7 @@ __global__ void allocKernel(HashData hashData, const float * depth, const struct
 	
 	if (x < dev_intrin->width && y < dev_intrin->height) {
 
-		float d = depth[y*dev_intrin->width + x]; // convert mm to meter
+		float d = depth[y*dev_intrin->width + x];
 		
 		if (d < hashParams.m_minIntegrationDistance)	return;
 

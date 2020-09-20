@@ -5,12 +5,12 @@
  *      Author: thomas
  */
 
-#ifndef SAFE_CALL_HPP_
-#define SAFE_CALL_HPP_
+#ifndef SAFE_CALL_H_2_
+#define SAFE_CALL_H_2_
 
 #include <cuda_runtime_api.h>
 #include <cstdlib>
-#include <iostream>             // for cout
+#include "init.h"
 
 #if defined(__GNUC__)
     #define cudaSafeCall(expr)  ___cudaSafeCall(expr, __FILE__, __LINE__, __func__)
@@ -18,18 +18,10 @@
     #define cudaSafeCall(expr)  ___cudaSafeCall(expr, __FILE__, __LINE__)
 #endif
 
-void error(const char *error_string, const char *file, const int line,
-           const char *func) {
-  std::cout << "Error: " << error_string << "\t" << file << ":" << line
-            << std::endl;
-  exit(0);
-}
-
-static inline void ___cudaSafeCall(cudaError_t err, const char *file, const int line, const char *func = "")
+static inline void ___cudaSafeCall(cudaError_t err2, const char *file, const int line, const char *func = "")
 {
-    if (cudaSuccess != err)
-        error(cudaGetErrorString(err), file, line, func);
+    if (cudaSuccess != err2)
+        error2(cudaGetErrorString(err2), file, line, func);
 }
 
-
-#endif /* SAFE_CALL_HPP_ */
+#endif /* SAFE_CALL_HPP_2_ */

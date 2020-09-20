@@ -37,6 +37,7 @@ int main(int argc, char * argv[]) try
     // cuda_pipeline.download_points=true;
     // cuda_pipeline.process_depth(depth);
     // cuda_pipeline.download_points=false;
+    slamPipeline.processDepth(depth);
 
     // vector<Point> tmp_points = convertFloatPointsToVectorPoint(cuda_pipeline.host_points, intrinsics.height * intrinsics.width);
     // std::cout << "Points exported" << std::endl;

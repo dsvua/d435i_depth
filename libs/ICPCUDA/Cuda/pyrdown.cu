@@ -96,7 +96,7 @@ __global__ void computeVmapKernel(const PtrStepSz<unsigned short> depth,
   int v = threadIdx.y + blockIdx.y * blockDim.y;
 
   if (u < depth.cols && v < depth.rows) {
-    float z = depth.ptr(v)[u] / 1000.f; // load and convert: mm -> meters
+    float z = depth.ptr(v)[u];
 
     if (z != 0 && z < depthCutoff) {
       float vx = z * (u - cx) * fx_inv;

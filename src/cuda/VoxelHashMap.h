@@ -1,29 +1,40 @@
 #ifndef VOXEL_HASH_MAP
+#define VOXEL_HASH_MAP
 
 #include <cuda_runtime.h>
 #include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
+#include <Eigen/Core>
 
 enum HashState {
 	NO_OFFSET = -1,
-	FREE_ENTRY = -2
+	FREE_ENTRY = -2,
+	FAIL_TO_INSERT = -3
 };
 
 struct Voxel {
 	float	sdf;		//signed distance function
 	float	weight;		//accumulated sdf weight
 
+    __device__ __host__
+	Voxel() {
+		sdf = 0;
+		weight = 0;
+	}
+
 };
 
 struct VoxelHashEntry {
-	int3 world_pos;
+	Eigen::Vector3f world_pos;
 	int voxelBlockIdx;
 	int offset;
+	bool compactified;
 
     __device__ __host__
 	VoxelHashEntry() {
-		world_pos = {0,0,0};
+		world_pos = Eigen::Vector3f(0,0,0);
 		voxelBlockIdx = FREE_ENTRY;
 		offset = NO_OFFSET;
+		compactified = false;
 	}
 };
 
@@ -33,18 +44,21 @@ struct VoxelHashParameters {
     int   			p1;
     int   			p2;
     float       	staticPartOfRMS; // formula is here: https://dev.intelrealsense.com/docs/tuning-depth-cameras-for-best-performance
-	float	    	maxIntegrationDistance; // in millimeters
-	float			minIntegrationDistance; // in millimeters
+	float	    	maxIntegrationDistance; // in meters
+	float			minIntegrationDistance; // in meters
+	float			maxDistanceForICP;
 	uint			voxelPhysicalSize; // size of voxel in millimeters
 	float			truncationDistance;
 	uint	    	integrationWeightMin;
+	uint			voxelBlockCubeSize; // voxelBlock becomes voxelBlockSize x voxelBlockSize x voxelBlockSize voxels size
 	uint	    	integrationWeightMax;
-	uint			voxelBlockSize; // voxelBlock becomes voxelBlockSize x voxelBlockSize x voxelBlockSize voxels size
 	uint			voxelsTotalSize;
+	uint			voxelBlockSize;
 	uint            numVoxelBlocks;
 	uint            voxelHashSize; // how many hash blocks to allocate
 	uint			voxelHashBlockSize; // number of hashEntries per hash block
 	uint			voxelHashTotalSize; // voxelHashSize * voxelHashBlockSize
+	uint			voxelBlockSideSize; // voxelPhysicalSize * voxelBlockSize -- needed for raytracing
 	// cuda settings
 	int				threadsPerBlock;
 
@@ -54,18 +68,21 @@ struct VoxelHashParameters {
 		p1 = 19349669;
 		p2 = 83492791;
 		staticPartOfRMS = 0;
-		maxIntegrationDistance = 4000;
-		minIntegrationDistance = 300;
-		voxelPhysicalSize = 10;
-		truncationDistance = voxelPhysicalSize * 5;
+		maxIntegrationDistance = 3000;
+		minIntegrationDistance = 100;
+		maxDistanceForICP = 6000;
+		voxelPhysicalSize = 4;
+		truncationDistance = voxelPhysicalSize * 3;
 		integrationWeightMin = 1;
 		integrationWeightMax = 255;
 		voxelBlockSize = 8;
 		numVoxelBlocks = 500000;
-		voxelsTotalSize = numVoxelBlocks * voxelBlockSize * voxelBlockSize * voxelBlockSize;
+		voxelBlockCubeSize = voxelBlockSize * voxelBlockSize * voxelBlockSize;
+		voxelsTotalSize = numVoxelBlocks * voxelBlockCubeSize;
 		voxelHashSize = 10000;
 		voxelHashBlockSize = 10;
 		voxelHashTotalSize = voxelHashSize * voxelHashBlockSize;
+		voxelBlockSideSize = voxelPhysicalSize * voxelBlockSize;
 		// cuda settings
 		threadsPerBlock = 8;
 	}
@@ -88,16 +105,22 @@ struct VoxelHashMap {
 	void initialize();
 
     __device__ __host__
-	uint computeHashPos(const int3& voxelPosition);
+	uint computeHashBlockPos(const Eigen::Vector3f voxelBlockWorldPos);
 
     __device__ __host__
-	int3 getVoxelWorldPosition(uint voxelIndexInBlock, int3 voxelBlockPos);
+	uint computeHashWorldPos(const Eigen::Vector3f WorldPos);
 
     __device__ __host__
-	uint linearizeVoxelPosition(int3 position);
+	Eigen::Vector3f getVoxelWorldPosition(uint voxelIndexInBlock, Eigen::Vector3f voxelBlockWorldPos);
 
     __device__ __host__
-	int3 delinearizeVoxelPosition(uint idx);
+	uint linearizeVoxelWorldPosition(Eigen::Vector3f deltaPos);
+
+    __device__ __host__
+	uint linearizeVoxelPosition(Eigen::Vector3f position);
+
+    __device__ __host__
+	Eigen::Vector3f delinearizeVoxelPosition(uint idx);
 
     __device__ __host__
     void combineVoxels(const Voxel &v0, const Voxel& v1, Voxel &out);
@@ -106,7 +129,13 @@ struct VoxelHashMap {
 	float getTruncation(float z);
 
     __device__ __host__
-	VoxelHashEntry getHashEntryByPosition(int3 worldPosition);
+	int getHashEntryByWordPosition(Eigen::Vector3f voxelBlockWorldPos);
+
+    __device__ __host__
+	int getHashEntryByPosition(Eigen::Vector3f voxelBlockPos);
+
+    __device__ __host__
+	Eigen::Vector3f voxelBlockPosFromWorldPos(Eigen::Vector3f worldPosition);
 
     __device__ __host__
 	void deleteHashEntry(uint hashEntryIdx);
@@ -114,8 +143,10 @@ struct VoxelHashMap {
     __device__ __host__
 	void deleteHashEntry(VoxelHashEntry& voxelHashEntry);
 
+	// inserts hashEntry and returns index where it is inserted
+	// or returns FAIL_TO_INSERT if cannot find a free place
     __device__ __host__
-	bool insertHashEntry(VoxelHashEntry voxelHashEntry);
+	int insertHashEntry(VoxelHashEntry voxelHashEntry);
 
 #ifdef __CUDA__ARCH__
     __device__
@@ -126,10 +157,10 @@ struct VoxelHashMap {
 #endif
 
     __device__
-	void toDeletedVoxelBlocks(uint voxelBlockIdx);
+	void deleteVoxelBlocks(uint voxelBlockIdx);
 
     __device__
-	uint fromDeletedVoxelBlocks();
+	uint getFreeVoxelBlock();
 
 
 };

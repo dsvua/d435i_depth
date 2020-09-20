@@ -1,6 +1,4 @@
 // CUDA runtime
-#include <cuda_runtime.h>
-#include "assert.h"
 #include "deproject_point.h"
 #include "CudaPipeline.h"
 
